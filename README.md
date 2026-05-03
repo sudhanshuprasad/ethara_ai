@@ -6,7 +6,7 @@ A full-stack project management web app where teams can create projects, assign 
 
 ## 🚀 Live URL
 
-> _Add your Railway URL here after deployment_
+> [_TaskFlow - Live URL_](https://etharaai-production-9aad.up.railway.app/)
 
 ---
 
@@ -161,6 +161,19 @@ POST /api/auth/login                  │ redirect to Google consent screen
 
 ---
 
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Database | PostgreSQL (Aiven) |
+| ORM | Prisma 7 (WASM / PrismaPg adapter) |
+| Auth | JWT (jsonwebtoken) + Google OAuth 2.0 |
+| Validation | Zod |
+| Styling | Vanilla CSS (custom dark design system) |
+| Deployment | Railway (Nixpacks / Node 22) |
+
+
 ### Data Model
 
 ```
@@ -240,38 +253,41 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🚂 Deploy to Railway
+## 🚀 How to Deploy
+
+You can deploy this Next.js app to platforms like Vercel, Railway, or Render. Here is the general flow:
 
 ### 1. Push to GitHub
 ```bash
 git push origin main
 ```
 
-### 2. Create a Railway project
-- Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub repo
-- Select this repository
+### 2. Connect to your hosting provider
+Create a new project on your chosen platform (e.g., Vercel, Railway) and connect your GitHub repository.
 
-### 3. Set environment variables in Railway
-| Variable | Value |
+### 3. Set Environment Variables
+You will need to configure the following environment variables in your hosting provider's dashboard:
+
+| Variable | Description / Value |
 |---|---|
 | `DATABASE_URL` | Your PostgreSQL connection string |
-| `JWT_SECRET` | Long random secret |
+| `JWT_SECRET` | A secure, long random string |
 | `GOOGLE_CLIENT_ID` | From Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
-| `GOOGLE_REDIRECT_URI` | `https://your-app.railway.app/api/v1/auth/google/callback` |
-| `NEXT_PUBLIC_APP_URL` | `https://your-app.railway.app` |
+| `GOOGLE_REDIRECT_URI` | `https://your-app-domain.com/api/v1/auth/google/callback` |
+| `NEXT_PUBLIC_APP_URL` | `https://your-app-domain.com` |
 
 ### 4. Add Google redirect URI
-In Google Cloud Console → OAuth 2.0 Credentials, add:
+In Google Cloud Console → OAuth 2.0 Credentials, add the callback URL for your production domain:
 ```
-https://your-app.railway.app/api/v1/auth/google/callback
+https://your-app-domain.com/api/v1/auth/google/callback
 ```
 
-Railway will automatically:
-1. Detect Node 22 via `nixpacks.toml`
-2. Run `npm run build` (which includes `prisma generate`)
-3. Run `npx prisma migrate deploy && npm start`
-4. Poll `/api/health` to confirm the app is live
+### 5. Build and Run Commands
+Ensure your platform runs the following steps (most platforms do this automatically for Next.js apps):
+1. Install dependencies: `npm install`
+2. Build the app: `npm run build` (this runs `prisma generate`)
+3. Run migrations and start: `npx prisma migrate deploy && npm start`
 
 ---
 
@@ -319,15 +335,3 @@ Railway will automatically:
 | `GET` | `/api/health` | — | App + DB liveness check |
 
 ---
-
-## 🧰 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Database | PostgreSQL (Aiven) |
-| ORM | Prisma 7 (WASM / PrismaPg adapter) |
-| Auth | JWT (jsonwebtoken) + Google OAuth 2.0 |
-| Validation | Zod |
-| Styling | Vanilla CSS (custom dark design system) |
-| Deployment | Railway (Nixpacks / Node 22) |

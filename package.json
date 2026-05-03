@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    rules: {
+      "*.wasm": {
+        loaders: [],
+        as: "*.wasm",
+      },
+    },
+  },
 };
 
 export default nextConfig;

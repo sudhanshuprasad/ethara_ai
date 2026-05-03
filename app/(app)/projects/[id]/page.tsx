@@ -391,7 +391,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <select value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)}>
                   <option value="">— Unassigned —</option>
                   {project.members.map((m) => (
-                    <option key={m.userId} value={m.userId}>{m.user.name}</option>
+                    <option key={m.userId} value={m.userId}>{m.user.name} ({m.user.email})</option>
                   ))}
                 </select>
               </div>

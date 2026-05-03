@@ -1,10 +1,9 @@
-// Allow self-signed cert chains (e.g. Aiven PostgreSQL) in dev + Railway
+// Aiven PostgreSQL uses a self-signed cert chain — bypass TLS verification
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 import { PrismaClient } from "@/app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
-
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
@@ -17,6 +16,6 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
+// Reuse singleton across hot-reloads in dev, and across module boundaries in prod
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+globalForPrisma.prisma = prisma;

@@ -35,12 +35,13 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 /* ─── Task Card ──────────────────────────────── */
 function TaskCard({
-  task, isAdmin, myId, onStatusChange,
+  task, isAdmin, myId, onStatusChange, onAssign,
 }: {
   task: Task;
   isAdmin: boolean;
   myId: string;
   onStatusChange: (taskId: string, newStatus: Task["status"], prevStatus: Task["status"]) => void;
+  onAssign: (task: Task) => void;
 }) {
   const canUpdateStatus = isAdmin || task.assignee?.id === myId;
   const [pending, setPending] = useState(false);
@@ -117,6 +118,15 @@ function TaskCard({
           )}
         </button>
       )}
+      {isAdmin && (
+        <button
+          className="task-reassign-btn"
+          onClick={() => onAssign(task)}
+          title="Assign / Reassign"
+        >
+          👤 Reassign
+        </button>
+      )}
     </div>
   );
 }
@@ -141,6 +151,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [taskAssignee, setTaskAssignee] = useState("");
   const [taskError, setTaskError] = useState("");
   const [taskSaving, setTaskSaving] = useState(false);
+
+  // Assign / Reassign modal
+  const [assignTarget, setAssignTarget] = useState<Task | null>(null);
+  const [assigneeId, setAssigneeId] = useState("");
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignError, setAssignError] = useState("");
 
   // Add member modal
   const [showMember, setShowMember] = useState(false);
@@ -218,6 +234,34 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       loadData();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed");
+    }
+  }
+
+  function openAssignModal(task: Task) {
+    setAssignTarget(task);
+    setAssigneeId(task.assignee?.id ?? "");
+    setAssignError("");
+  }
+
+  async function saveAssignment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!assignTarget) return;
+    setAssignSaving(true);
+    setAssignError("");
+    try {
+      const res = await api.patch<{ task: Task }>(
+        `/projects/${id}/tasks/${assignTarget.id}/assign`,
+        { assigneeId: assigneeId || null }
+      );
+      // Optimistically update local list
+      setTasks((prev) =>
+        prev.map((t) => (t.id === assignTarget.id ? { ...t, assignee: res.task.assignee } : t))
+      );
+      setAssignTarget(null);
+    } catch (err: unknown) {
+      setAssignError(err instanceof Error ? err.message : "Failed to reassign");
+    } finally {
+      setAssignSaving(false);
     }
   }
 
@@ -304,13 +348,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                       task={task}
                       isAdmin={isAdmin}
                       myId={myId}
-                      onStatusChange={(taskId, newStatus, prevStatus) => {
+                      onStatusChange={(taskId, newStatus) => {
                         setTasks((prev) =>
                           prev.map((t) =>
                             t.id === taskId ? { ...t, status: newStatus } : t
                           )
                         );
                       }}
+                      onAssign={openAssignModal}
                     />
                   ))
                 )}
@@ -432,6 +477,45 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <button type="button" className="btn-ghost" onClick={() => setShowMember(false)}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={memberSaving}>
                   {memberSaving ? <span className="spinner" /> : "Add member"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign / Reassign Modal */}
+      {assignTarget && (
+        <div className="modal-overlay" onClick={() => setAssignTarget(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Assign Task</h2>
+              <button className="modal-close" onClick={() => setAssignTarget(null)}>✕</button>
+            </div>
+            <p className="assign-task-name">{assignTarget.title}</p>
+            <form onSubmit={saveAssignment} className="modal-form" style={{ marginTop: "1rem" }}>
+              {assignError && <div className="auth-error">{assignError}</div>}
+              <div className="field-group">
+                <label>Assign to</label>
+                <select
+                  value={assigneeId}
+                  onChange={(e) => setAssigneeId(e.target.value)}
+                  autoFocus
+                >
+                  <option value="">— Unassigned —</option>
+                  {project!.members.map((m) => (
+                    <option key={m.userId} value={m.userId}>
+                      {m.user.name} ({m.user.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-ghost" onClick={() => setAssignTarget(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={assignSaving}>
+                  {assignSaving ? <span className="spinner" /> : "Save"}
                 </button>
               </div>
             </form>

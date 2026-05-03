@@ -598,6 +598,25 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 .task-cycle-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.task-reassign-btn {
+  width: 100%; padding: 5px;
+  border: 1px solid rgba(52,211,153,0.25); border-radius: 6px;
+  background: rgba(52,211,153,0.06); color: var(--success);
+  font-size: 0.72rem; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.task-reassign-btn:hover { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.5); }
+
+/* Assign modal task label */
+.assign-task-name {
+  font-size: 0.85rem; font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  line-height: 1.4;
+}
 
 /* ─── Badges ──────────────────────────────────────── */
 .priority-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em; }

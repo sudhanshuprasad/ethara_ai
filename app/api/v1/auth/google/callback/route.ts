@@ -19,7 +19,7 @@ interface GoogleUserInfo {
 /** GET /api/auth/google/callback — exchange code for tokens, upsert user, return JWT */
 export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const redirectUri = `${appUrl}/api/auth/google/callback`;
+  const redirectUri = `${appUrl}/api/v1/auth/google/callback`;
 
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");

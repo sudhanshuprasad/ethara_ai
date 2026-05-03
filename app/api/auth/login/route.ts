@@ -26,10 +26,19 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  // OAuth-only accounts have no password
+  if (!user.password) {
+    return Response.json(
+      { error: "This account uses Google sign-in. Please use 'Continue with Google'." },
+      { status: 401 }
+    );
+  }
+
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
     return Response.json({ error: "Invalid credentials" }, { status: 401 });
   }
+
 
   const token = signToken({ userId: user.id, email: user.email });
   return Response.json({

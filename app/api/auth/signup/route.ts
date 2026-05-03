@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
     data: { name, email, password: hashed },
-    select: { id: true, name: true, email: true, createdAt: true },
+    select: { id: true, name: true, email: true, avatarUrl: true, createdAt: true },
   });
 
   const token = signToken({ userId: user.id, email: user.email });

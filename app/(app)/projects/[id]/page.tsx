@@ -35,24 +35,44 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 /* ─── Task Card ──────────────────────────────── */
 function TaskCard({
-  task, members, isAdmin, myId, onRefresh,
+  task, isAdmin, myId, onStatusChange,
 }: {
-  task: Task; members: Member[]; isAdmin: boolean; myId: string; onRefresh: () => void;
+  task: Task;
+  isAdmin: boolean;
+  myId: string;
+  onStatusChange: (taskId: string, newStatus: Task["status"], prevStatus: Task["status"]) => void;
 }) {
-  const projectId = task.projectId ?? "";
   const canUpdateStatus = isAdmin || task.assignee?.id === myId;
+  const [pending, setPending] = useState(false);
+
+  const NEXT_STATUS: Record<Task["status"], Task["status"]> = {
+    TODO: "IN_PROGRESS",
+    IN_PROGRESS: "DONE",
+    DONE: "TODO",
+  };
+  const NEXT_LABEL: Record<Task["status"], string> = {
+    TODO: "Start",
+    IN_PROGRESS: "Done",
+    DONE: "Reopen",
+  };
 
   async function cycleStatus() {
-    if (!canUpdateStatus) return;
-    const next: Record<string, Task["status"]> = {
-      TODO: "IN_PROGRESS", IN_PROGRESS: "DONE", DONE: "TODO",
-    };
+    if (!canUpdateStatus || pending) return;
+    const nextStatus = NEXT_STATUS[task.status];
+    // 1. Optimistic update — move card instantly
+    onStatusChange(task.id, nextStatus, task.status);
+    setPending(true);
     try {
       await api.patch(`/projects/${task.projectId}/tasks/${task.id}/status`, {
-        status: next[task.status],
+        status: nextStatus,
       });
-      onRefresh();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      // 2. Revert on failure
+      console.error(e);
+      onStatusChange(task.id, task.status, nextStatus);
+    } finally {
+      setPending(false);
+    }
   }
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "DONE";
@@ -84,8 +104,17 @@ function TaskCard({
         )}
       </div>
       {canUpdateStatus && (
-        <button className="task-cycle-btn" onClick={cycleStatus} title="Cycle status">
-          → Next
+        <button
+          className={`task-cycle-btn ${pending ? "pending" : ""}`}
+          onClick={cycleStatus}
+          disabled={pending}
+          title={`Move to ${NEXT_STATUS[task.status].replace("_", " ")}`}
+        >
+          {pending ? (
+            <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />
+          ) : (
+            `→ ${NEXT_LABEL[task.status]}`
+          )}
         </button>
       )}
     </div>
@@ -273,10 +302,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                     <TaskCard
                       key={task.id}
                       task={task}
-                      members={project.members}
                       isAdmin={isAdmin}
                       myId={myId}
-                      onRefresh={loadData}
+                      onStatusChange={(taskId, newStatus, prevStatus) => {
+                        setTasks((prev) =>
+                          prev.map((t) =>
+                            t.id === taskId ? { ...t, status: newStatus } : t
+                          )
+                        );
+                      }}
                     />
                   ))
                 )}

@@ -735,3 +735,4 @@ body {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .modal-row { grid-template-columns: 1fr; }
 }
+.task-cycle-btn.pending { opacity: 0.6; cursor: not-allowed; }
